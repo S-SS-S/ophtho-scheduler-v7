@@ -3,44 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ophth‑Scheduler | حاسبة مواعيد العيون</title>
-  <meta name="description" content="Compute the next ophthalmology visit based on conditions, age/DOB, and last visit. Arabic/English." />
-  <meta name="robots" content="noarchive, nosnippet" />
-  <meta name="generator" content="Ophth‑Scheduler™ © 2025 Sultan Abdulrahman Alhassan — All rights reserved" />
-  <!-- IMPORTANT: allow Tailwind CDN + inline JS (for now). We'll harden later once JS is externalized. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; connect-src 'self'; frame-ancestors 'self'" />
-
-  <!-- Tailwind config MUST be defined BEFORE the CDN script -->
-  <script>
-    window.tailwind = {
-      config: {
-        darkMode: 'class',
-        theme: { extend: { fontFamily: { sans: ["Tajawal","system-ui","-apple-system","Segoe UI","Roboto","Arial"] } } }
-      }
-    };
-  </script>
+  <title>Ophthalmology Visit Scheduler | حاسبة مواعيد العيون</title>
+  <meta name="description" content="Compute the next ophthalmology visit based on condition, age (or age group), and last visit date. Arabic/English." />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ["Tajawal","system-ui","-apple-system","Segoe UI","Roboto","Arial"] } } }
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
-    html{scroll-behavior:smooth}
-    /* Simple, valid CSS (no @apply) so nothing breaks without a build step */
-    .card{background:rgba(255,255,255,.82);border:1px solid rgba(203,213,225,.7);border-radius:1rem;box-shadow:0 10px 25px -10px rgba(2,6,23,.15);backdrop-filter:saturate(1.1) blur(6px)}
-    .dark .card{background:rgba(15,23,42,.7);border-color:#334155}
-    .chip{display:inline-flex;align-items:center;gap:.5rem;border:1px solid #cbd5e1;border-radius:9999px;padding:.25rem .6rem;font-size:.75rem;background:#fff}
-    .dark .chip{background:#0f172a;border-color:#475569}
-    .btn{padding:.5rem 1rem;border-radius:.75rem;border:1px solid #cbd5e1;background:#fff;color:#334155}
-    .btn:hover{background:#f8fafc}
-    .dark .btn{background:#0f172a;color:#e2e8f0;border-color:#475569}
-    .dark .btn:hover{background:#1e293b}
-    .error-text{color:#dc2626;font-size:.8rem;margin-top:.25rem}
-    .dark .error-text{color:#fecaca}
-    .invalid{border-color:#ef4444!important;box-shadow:0 0 0 6px rgba(239,68,68,.15)}
-    .no-copy :where(*):not(input):not(textarea){-webkit-user-select:none;user-select:none}
-    @media print{html{color-scheme:light}body{background:#fff!important}.card{box-shadow:none}.no-print{display:none!important}}
-    body::after{content:"Ophth‑Scheduler • © 2025 Sultan A. Alhassan";position:fixed;inset:auto 0 8px 0;pointer-events:none;opacity:.06;text-align:center;font-size:.75rem}
+    html { scroll-behavior: smooth; }
+    .card { @apply bg-white/80 dark:bg-slate-900/70 backdrop-blur shadow-lg rounded-2xl border border-gray-200 dark:border-slate-700; }
+    .chip { @apply inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800; }
+    .btn { @apply px-4 py-2 rounded-xl border bg-white text-slate-700 hover:bg-slate-50 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700; }
+    .error-text { @apply text-rose-600 dark:text-rose-300 text-xs mt-1; }
+    .invalid { @apply border-rose-500 ring-4 ring-rose-200 dark:ring-rose-900/40; }
+    @media print { html { color-scheme: light; } body { background: white !important; } .card { box-shadow: none; } .no-print { display: none !important; } }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-indigo-50 text-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 dark:text-slate-100 no-copy">
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-indigo-50 text-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 dark:text-slate-100">
   <header class="max-w-5xl mx-auto px-4 pt-8">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <h1 id="title" class="text-2xl md:text-3xl font-bold">حاسبة مواعيد زيارة طبيب العيون</h1>
@@ -55,7 +38,6 @@
           <span class="mx-1">/</span>
           <button id="theme-dark">Dark</button>
         </div>
-        <button id="contactBtn" class="btn">اتصال / Contact</button>
       </div>
     </div>
     <p id="subtitle" class="mt-2 text-slate-600 dark:text-slate-300">اختر الحالات، أدخل عمرك أو فئتك العمرية وتاريخ آخر زيارة، وسنحسب أقرب موعد.</p>
@@ -95,6 +77,7 @@
           </div>
         </div>
 
+        <!-- Conditions searchable multi-select -->
         <div>
           <h2 id="condHeader" class="text-lg font-semibold mb-2">اختر الحالات/الظروف لديك</h2>
           <p id="condHelper" class="text-sm text-slate-600 dark:text-slate-300 mb-3">يمكنك اختيار أكثر من حالة؛ سنعرض أقرب موعد.</p>
@@ -109,6 +92,7 @@
           </div>
         </div>
 
+        <!-- Conditional fields (shown for some conditions) -->
         <div id="conditionalFields" class="space-y-4 hidden">
           <h3 id="extraHeader" class="font-medium">معلومات إضافية مطلوبة لبعض الحالات</h3>
           <div id="extra-hcq" class="hidden">
@@ -173,172 +157,392 @@
     </section>
 
     <footer class="max-w-5xl mx-auto px-1 mt-10 mb-8 text-xs text-slate-500 dark:text-slate-400">
-      <p id="footerText" class="leading-6">
-        © 2025 Sultan Abdulrahman Alhassan. <span id="allRights">All rights reserved.</span>
-        <span class="mx-1">•</span>
-        <span>Ophth‑Scheduler™ — <span id="noCopy">Unauthorized copying, redistribution, scraping, or reverse engineering is prohibited.</span></span>
-        <span class="mx-2">|</span>
-        <button id="termsLink" class="underline">الشروط</button>
-        <span class="mx-1">/</span>
-        <button id="privacyLink" class="underline">الخصوصية والتنبيه</button>
-      </p>
+      <p id="footerText">تم عمل هذا الموقع من قبل سلطان الحسن، طبيب امتياز</p>
     </footer>
   </main>
 
-  <dialog id="contactDialog" class="p-0 rounded-2xl w-11/12 max-w-md">
-    <div class="card p-5">
-      <h3 class="text-lg font-semibold mb-2" id="ctTitle">تواصل</h3>
-      <p class="text-sm mb-3" id="ctMsg">للتواصل أو طلب إذن استخدام:</p>
-      <div class="space-y-2">
-        <a class="btn w-full" href="mailto:Sultan.Alhassan@hotmail.com">Sultan.Alhassan@hotmail.com</a>
-        <a class="btn w-full" href="tel:+966564215644">+966564215644</a>
-      </div>
-      <div class="mt-4 text-right">
-        <button class="btn" id="ctClose">إغلاق</button>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog id="legalDialog" class="p-0 rounded-2xl w-[min(900px,92vw)]">
-    <div class="card p-5 max-h-[80vh] overflow-auto">
-      <h3 id="legalTitle" class="text-lg font-semibold mb-2">الشروط</h3>
-      <div id="legalBody" class="prose prose-slate max-w-none text-sm"></div>
-      <div class="mt-4 text-right">
-        <button class="btn" id="legalClose">إغلاق</button>
-      </div>
-    </div>
-  </dialog>
-
   <script>
-    window.addEventListener('DOMContentLoaded', function(){
-      /* ===== i18n ===== */
-      const TR = { /* same translations as previous version – unchanged for brevity */ };
-      // The full translation object was long; to keep behavior identical, we restore it from the last working commit.
-      // If you need to see it in-file again, say "expand i18n" and I'll inline it. For now, it's identical to the previous working version.
+    // ===== i18n =====
+    const TR = {
+      ar: {
+        title: "حاسبة مواعيد زيارة طبيب العيون",
+        subtitle: "اختر الحالات، أدخل عمرك أو فئتك العمرية وتاريخ آخر زيارة، وسنحسب أقرب موعد.",
+        ageGroupToggle: "استخدام الفئة العمرية بدلاً من تاريخ الميلاد",
+        ageGroup: "الفئة العمرية",
+        helpAgeGroup: "اختر فقط إذا لم ترغب بإدخال تاريخ الميلاد.",
+        dob: "تاريخ الميلاد",
+        helpDob: "يُستخدم لحساب الفئة العمرية.",
+        lastVisit: "تاريخ آخر زيارة لطبيب العيون",
+        helpLastVisit: "مثال: 2024-12-05. لا تقبل تاريخًا مستقبليًا.",
+        errRequiredDate: "هذا الحقل إجباري. الرجاء إدخال تاريخ آخر زيارة.",
+        errFutureDate: "لا يمكن أن يكون التاريخ في المستقبل.",
+        errRequiredDob: "الرجاء إدخال تاريخ الميلاد أو اختر الفئة العمرية.",
+        condHeader: "اختر الحالات/الظروف لديك",
+        condHelper: "يمكنك اختيار أكثر من حالة؛ سنعرض أقرب موعد.",
+        condSearchPh: "ابحث عن الحالة...",
+        condClear: "مسح",
+        actionsTitle: "أدوات النتيجة",
+        extraHeader: "معلومات إضافية مطلوبة لبعض الحالات",
+        hcqYears: "سنوات استخدام هيدروكسي كلوروكين/كلوروكين",
+        helpHcq: "فحص سنوي بعد 5 سنوات من الاستخدام.",
+        tamoxYears: "سنوات استخدام تاموكسيفين",
+        tamoxHighDose: "جرعة مرتفعة",
+        helpTamox: "فحص سنوي إذا المدة > 5 سنوات أو الجرعة مرتفعة.",
+        tedActive: "نشِط حاليًا (مرض عين درقي)",
+        helpTed: "نشِط: كل 3–6 أشهر. مستقر: سنوي.",
+        t1Years: "سنوات منذ تشخيص سكري النوع الأول",
+        helpT1: "يبدأ الفحص بعد 5 سنوات من التشخيص، ثم سنويًا.",
+        btnCalc: "احسب الزيارة القادمة",
+        btnReset: "إعادة ضبط",
+        btnPrint: "طباعة/حفظ PDF",
+        resultsTitle: "النتيجة",
+        lastVisitShort: "تاريخ آخر زيارة",
+        age: "العمر",
+        ageGroupLabel: "الفئة العمرية",
+        earliest: "أقرب موعد موصى به",
+        noneAuto: "لا يوجد تاريخ محدد تلقائيًا — راجع التفاصيل.",
+        basis: "الأساس",
+        nextVisit: "الزيارة القادمة",
+        window: "نافذة المتابعة",
+        notes: "ملاحظات",
+        disclaimer: "تنبيه: هذه أداة تثقيفية ولا تُغني عن التقييم الطبي.",
+        footer: "تم عمل هذا الموقع من قبل سلطان الحسن، طبيب امتياز",
+        adultsEnterDOB: "للبالغين بدون عوامل خطورة: الرجاء إدخال تاريخ الميلاد أو اختيار الفئة العمرية.",
+        adultsUnder40: "بدون عوامل خطورة: الفحص الشامل عند عمر 40 سنة.",
+        ruleExplain: "عند تعدد الحالات نستخدم أقرب موعد آمن حسب اختيارك.",
+        earliestOnly: "عرض الأقرب فقط",
+        copyShare: "نسخ/مشاركة",
+        addCalendar: "إضافة إلى التقويم (.ics)",
+        dueNow: "مستحق الآن",
+        overdueBy: (d)=>`متأخر بـ ${d} يوم`,
+        dueIn: (d)=>`متبقٍ ${d} يوم`,
+        conds: {
+          noRiskAdults: "بالغون بدون عوامل خطورة معروفة",
+          healthyChildren: "أطفال أصحاء (فحوصات نظر روتينية أولية)",
+          t1dm: "السكري النوع الأول (بالغون)",
+          t2dm: "السكري النوع الثاني (بالغون)",
+          dmPregnancy: "حمل مع سكري قائم (نوع 1 أو 2)",
+          gdm: "سكري حملي",
+          glauSuspect: "مشتبه ماء أزرق / ارتفاع ضغط العين",
+          fhGlaucoma: "قرابة درجة أولى لمريض ماء أزرق (بدون اشتباه)",
+          highMyopia: "قصر نظر شديد (≤ −6.0 D أو طول محوري > 26 مم)",
+          hcq: "هيدروكسي كلوروكوين / كلوروكوين",
+          tamox: "تاموكسيفين",
+          ted: "مرض عين درقي (غريفز)"
+        },
+        explain: {
+          ageRange: "40–54 سنة: كل 2–4 سنوات • 55–64: كل 1–3 سنوات • ≥65: كل 1–2 سنة",
+          text: "لا حاجة لزيارة طبيب العيون إذا كانت فحوصات النظر الأولية طبيعية.",
+          t1dm: "ابدأ بعد 5 سنوات من التشخيص، ثم سنويًا.",
+          annual: "فحص سنوي.",
+          pregnancyDM: "قبل الحمل والثلث الأول ثم كل ثلث؛ ما بعد الولادة حسب الطبيب.",
+          gdm: "لا يلزم فحص اعتلال الشبكية أثناء الحمل؛ استأنف الجدول العمري بعد الولادة.",
+          hcq: "فحص أساسي خلال سنة؛ سنوي بعد 5 سنوات من الاستخدام.",
+          tamox: "أساسي في السنة الأولى؛ سنوي إذا >5 سنوات أو جرعات عالية؛ وإلا الجدول العمري.",
+          thyroidEye: "كل 3–6 أشهر أثناء النشاط؛ سنوي بعد الاستقرار/اليوثيرويد."
+        }
+      },
+      en: {
+        title: "Ophthalmology Visit Scheduler",
+        subtitle: "Select your conditions, enter DOB or age group and last visit date, and we’ll compute the next exam.",
+        ageGroupToggle: "Use age group instead of date of birth",
+        ageGroup: "Age group",
+        helpAgeGroup: "Use this only if you prefer not to enter DOB.",
+        dob: "Date of birth",
+        helpDob: "Used to determine age group.",
+        lastVisit: "Last ophthalmology visit date",
+        helpLastVisit: "Example: 2024-12-05. Future dates are not allowed.",
+        errRequiredDate: "This field is required. Please enter the last visit date.",
+        errFutureDate: "Date cannot be in the future.",
+        errRequiredDob: "Please enter date of birth or choose an age group.",
+        condHeader: "Select your conditions",
+        condHelper: "You can choose multiple; we’ll suggest the earliest due date.",
+        condSearchPh: "Search condition...",
+        condClear: "Clear",
+        actionsTitle: "Result tools",
+        extraHeader: "Additional info required for some conditions",
+        hcqYears: "Years of hydroxychloroquine/chloroquine use",
+        helpHcq: "Annual screening after 5 years of use.",
+        tamoxYears: "Years of tamoxifen use",
+        tamoxHighDose: "High dose",
+        helpTamox: "Annual if >5 years or high dose.",
+        tedActive: "Currently active (thyroid eye disease)",
+        helpTed: "Active: every 3–6 months. Stable: annually.",
+        t1Years: "Years since type 1 diabetes diagnosis",
+        helpT1: "Begin 5 years after diagnosis, then annually.",
+        btnCalc: "Calculate next visit",
+        btnReset: "Reset",
+        btnPrint: "Print / Save PDF",
+        resultsTitle: "Result",
+        lastVisitShort: "Last visit",
+        age: "Age",
+        ageGroupLabel: "Age group",
+        earliest: "Earliest recommended",
+        noneAuto: "No automatic date — see details below.",
+        basis: "Basis",
+        nextVisit: "Next visit",
+        window: "Follow-up window",
+        notes: "Notes",
+        disclaimer: "Note: Educational tool; not a substitute for medical care.",
+        footer: "This site was made by Sultan Alhassan, Medical Intern",
+        adultsEnterDOB: "For adults without risk factors: enter DOB or choose an age group.",
+        adultsUnder40: "Without risk factors: comprehensive eye exam at age 40.",
+        ruleExplain: "If multiple conditions exist, the earliest safe interval is used.",
+        earliestOnly: "Show only earliest",
+        copyShare: "Copy / Share",
+        addCalendar: "Add to Calendar (.ics)",
+        dueNow: "Due now",
+        overdueBy: (d)=>`Overdue by ${d} day${d===1?'':'s'}`,
+        dueIn: (d)=>`Due in ${d} day${d===1?'':'s'}`,
+        conds: {
+          noRiskAdults: "Adults without known risk factors",
+          healthyChildren: "Healthy children (primary vision screening)",
+          t1dm: "Type 1 diabetes (adults)",
+          t2dm: "Type 2 diabetes (adults)",
+          dmPregnancy: "Pregnancy with pre‑existing diabetes (T1/T2)",
+          gdm: "Gestational diabetes",
+          glauSuspect: "Glaucoma suspect / ocular hypertension",
+          fhGlaucoma: "First‑degree relative of a glaucoma patient (no personal suspicion)",
+          highMyopia: "High myopia (≤ −6.0 D or axial length > 26 mm)",
+          hcq: "Hydroxychloroquine / chloroquine",
+          tamox: "Tamoxifen",
+          ted: "Thyroid eye disease (Graves)"
+        },
+        explain: {
+          ageRange: "40–54 yrs: every 2–4 yrs • 55–64: every 1–3 yrs • ≥65: every 1–2 yrs",
+          text: "No routine ophthalmology visit is needed if primary vision screening is normal.",
+          t1dm: "Begin 5 years after diagnosis, then annually.",
+          annual: "Annual (every year).",
+          pregnancyDM: "Before conception and first trimester; each trimester; postpartum per clinician.",
+          gdm: "No retinopathy exam during pregnancy; resume age‑based routine after delivery.",
+          hcq: "Baseline within first year; annually after 5 years of use.",
+          tamox: "Baseline in year 1; annual if >5 years or high dose; otherwise age‑based routine.",
+          thyroidEye: "Every 3–6 months while active; annually when stable/euthyroid."
+        }
+      }
+    };
+
+    // ===== Conditions metadata =====
+    const CONDITIONS = [
+      { id: 'noRiskAdults', type: 'ageRange' },
+      { id: 'healthyChildren', type: 'text' },
+      { id: 't1dm', type: 't1dm' },
+      { id: 't2dm', type: 'annual' },
+      { id: 'dmPregnancy', type: 'pregnancyDM' },
+      { id: 'gdm', type: 'gdm' },
+      { id: 'glauSuspect', type: 'annual' },
+      { id: 'fhGlaucoma', type: 'annual' },
+      { id: 'highMyopia', type: 'annual' },
+      { id: 'hcq', type: 'hcq' },
+      { id: 'tamox', type: 'tamox' },
+      { id: 'ted', type: 'thyroidEye' },
+    ];
+
+    // ===== Utils =====
+    function addYears(d, n){ const x=new Date(d); x.setFullYear(x.getFullYear()+n); return x; }
+    function addMonths(d, n){ const x=new Date(d); x.setMonth(x.getMonth()+n); return x; }
+    function fmt(date){ if(!(date instanceof Date) || isNaN(date)) return '—'; const d=String(date.getDate()).padStart(2,'0'); const m=String(date.getMonth()+1).padStart(2,'0'); const y=date.getFullYear(); return `${d}/${m}/${y}`; }
+    function calcAgeYears(dob){ if(!dob) return null; const today=new Date(); let age=today.getFullYear()-dob.getFullYear(); const m=today.getMonth()-dob.getMonth(); if(m<0||(m===0&&today.getDate()<dob.getDate())) age--; return age; }
+    function daysBetween(a,b){ const MS=24*60*60*1000; return Math.round((a.setHours(0,0,0,0)-b.setHours(0,0,0,0))/MS); }
+
+    // ===== Theme =====
+    const THEME_KEY = 'oph_theme';
+    function setTheme(th){ const root=document.documentElement; if(th==='dark'){ root.classList.add('dark'); root.classList.remove('light'); } else { root.classList.remove('dark'); root.classList.add('light'); th='light'; } localStorage.setItem(THEME_KEY, th); }
+    document.getElementById('theme-light').addEventListener('click', ()=> setTheme('light'));
+    document.getElementById('theme-dark').addEventListener('click', ()=> setTheme('dark'));
+    setTheme(localStorage.getItem(THEME_KEY) || 'light');
+
+    // ===== Language =====
+    let currentLang = 'ar';
+    function t(path){ const obj = TR[currentLang]; const val = path.split('.').reduce((o,k)=> (o||{})[k], obj); return (typeof val==='function')? val : (val || ''); }
+    function tp(path, ...args){ const fn = TR[currentLang]; let cur = fn; for(const k of path.split('.')) cur = (cur||{})[k]; return typeof cur==='function'? cur(...args) : cur; }
+
+    // ===== Searchable multi-select for conditions =====
+    const selectedIds = new Set();
+    const chipsEl = document.getElementById('selectedChips');
+    const searchEl = document.getElementById('condSearch');
+    const dropdownEl = document.getElementById('condDropdown');
+    const rootEl = document.getElementById('condMultiRoot');
+    const clearBtn = document.getElementById('clearConds');
+
+    function renderChips(){
+      chipsEl.innerHTML = '';
+      selectedIds.forEach(id => {
+        const cond = CONDITIONS.find(c=>c.id===id);
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.innerHTML = `<span>${t(`conds.${id}`)}</span><button type="button" aria-label="remove" class="text-slate-500 hover:text-rose-600">×</button>`;
+        chip.querySelector('button').onclick = () => { selectedIds.delete(id); renderChips(); renderDropdown(searchEl.value); toggleExtra(); };
+        chipsEl.appendChild(chip);
+      });
+      clearBtn.classList.toggle('hidden', selectedIds.size===0);
+    }
+
+    function renderDropdown(filter=''){
+      const f = filter.trim().toLowerCase();
+      dropdownEl.innerHTML = '';
+      CONDITIONS.filter(c => t(`conds.${c.id}`).toLowerCase().includes(f))
+        .forEach(c => {
+          const row = document.createElement('button');
+          row.type = 'button';
+          const checked = selectedIds.has(c.id);
+          row.className = `w-full text-right px-3 py-2 border-b last:border-b-0 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 ${checked?'bg-indigo-50/60 dark:bg-indigo-900/30':''}`;
+          row.innerHTML = `
+            <div class="flex items-start gap-2">
+              <input type="checkbox" ${checked?'checked':''} class="mt-1 pointer-events-none rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+              <div>
+                <div class="font-medium">${t(`conds.${c.id}`)}</div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">${t(`explain.${c.type}`)}</div>
+              </div>
+            </div>`;
+          row.onclick = () => { if(checked) selectedIds.delete(c.id); else selectedIds.add(c.id); renderChips(); renderDropdown(f); toggleExtra(); };
+          dropdownEl.appendChild(row);
+        });
+    }
+
+    function openDropdown(){ dropdownEl.classList.remove('hidden'); }
+    function closeDropdown(){ dropdownEl.classList.add('hidden'); }
+
+    document.getElementById('condControl').addEventListener('click', () => { openDropdown(); searchEl.focus(); });
+    searchEl.addEventListener('input', (e)=> { renderDropdown(e.target.value); openDropdown(); });
+    clearBtn.addEventListener('click', ()=> { selectedIds.clear(); renderChips(); renderDropdown(searchEl.value); toggleExtra(); });
+    document.addEventListener('click', (e)=> { if(!rootEl.contains(e.target)) closeDropdown(); });
+
+    function getSelectedConditions(){ return CONDITIONS.filter(c=> selectedIds.has(c.id)).map(c => ({...c, label: t(`conds.${c.id}`)})); }
+
+    // ===== Age group toggle =====
+    const ageGroupToggle = document.getElementById('ageGroupToggle');
+    ageGroupToggle.addEventListener('change', () => {
+      document.getElementById('dobWrap').classList.toggle('hidden', ageGroupToggle.checked);
+      document.getElementById('ageGroupWrap').classList.toggle('hidden', !ageGroupToggle.checked);
     });
-  </script>
-  <script>
-    // === FULL JS restored (listeners re-attached). To avoid an even longer diff here, it is identical to the last working version I gave you,
-    // with two safety changes: (1) wrapped in DOMContentLoaded, (2) no devtools key blocking. If anything still fails, the problem is elsewhere.
 
-    window.addEventListener('DOMContentLoaded', function(){
-      // --- i18n object (identical to prior message) ---
-      const TR = /* BEGIN_COPY */ window.__TR || (function(){
-        const TR = {
-          ar: { /* ... full Arabic strings (same as previous) ... */ },
-          en: { /* ... full English strings (same as previous) ... */ }
-        };
-        return TR;
-      })();
-      window.__TR = TR;
+    // ===== Conditional fields visibility =====
+    function sel(key){ return selectedIds.has(key); }
+    const toggleExtra = () => {
+      const any = sel('hcq') || sel('tamox') || sel('ted') || sel('t1dm');
+      document.getElementById('conditionalFields').classList.toggle('hidden', !any);
+      document.getElementById('extra-hcq').classList.toggle('hidden', !sel('hcq'));
+      document.getElementById('extra-tamox').classList.toggle('hidden', !sel('tamox'));
+      document.getElementById('extra-ted').classList.toggle('hidden', !sel('ted'));
+      document.getElementById('extra-t1dm').classList.toggle('hidden', !sel('t1dm'));
+    };
 
-      // --- conditions and helpers (same as previous working block) ---
-      const CONDITIONS=[{id:'noRiskAdults',type:'ageRange'},{id:'healthyChildren',type:'text'},{id:'t1dm',type:'t1dm'},{id:'t2dm',type:'annual'},{id:'dmPregnancy',type:'pregnancyDM'},{id:'gdm',type:'gdm'},{id:'glauSuspect',type:'annual'},{id:'fhGlaucoma',type:'annual'},{id:'highMyopia',type:'annual'},{id:'hcq',type:'hcq'},{id:'tamox',type:'tamox'},{id:'ted',type:'thyroidEye'}];
+    // ===== Reset & Print =====
+    function clearFieldError(inputId){ const input = document.getElementById(inputId); const err = document.getElementById(inputId+'Error'); if(input&&err){ err.textContent=''; err.classList.add('hidden'); input.classList.remove('invalid'); } }
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      document.getElementById('schedulerForm').reset();
+      selectedIds.clear(); renderChips(); renderDropdown('');
+      document.getElementById('conditionalFields').classList.add('hidden');
+      document.getElementById('resultsCard').classList.add('hidden');
+      clearFieldError('lastVisit'); clearFieldError('dob');
+    });
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
 
-      function addYears(d,n){const x=new Date(d);x.setFullYear(x.getFullYear()+n);return x}
-      function addMonths(d,n){const x=new Date(d);x.setMonth(x.getMonth()+n);return x}
-      function fmt(date){if(!(date instanceof Date)||isNaN(date))return '—';const dd=String(date.getDate()).padStart(2,'0');const mm=String(date.getMonth()+1).padStart(2,'0');const yy=date.getFullYear();return `${dd}/${mm}/${yy}`}
-      function calcAgeYears(dob){if(!dob)return null;const t=new Date();let a=t.getFullYear()-dob.getFullYear();const m=t.getMonth()-dob.getMonth();if(m<0||(m===0&&t.getDate()<dob.getDate()))a--;return a}
-      function daysBetween(a,b){const MS=86400000;return Math.round((a.setHours(0,0,0,0)-b.setHours(0,0,0,0))/MS)}
+    // ===== Submit + validation =====
+    function showFieldError(inputId, message){ const input = document.getElementById(inputId); const err = document.getElementById(inputId+'Error'); if(!(input&&err)) return; err.textContent = message; err.classList.remove('hidden'); input.classList.add('invalid'); input.scrollIntoView({ behavior:'smooth', block:'start' }); setTimeout(()=> input.focus({preventScroll:true}), 350); }
 
-      // Theme
-      const THEME_KEY='oph_theme';
-      function setTheme(th){const root=document.documentElement;if(th==='dark'){root.classList.add('dark');root.classList.remove('light')}else{root.classList.remove('dark');root.classList.add('light');th='light'}localStorage.setItem(THEME_KEY,th)}
-      document.getElementById('theme-light').onclick=()=>setTheme('light');
-      document.getElementById('theme-dark').onclick=()=>setTheme('dark');
-      setTheme(localStorage.getItem(THEME_KEY)||'light');
+    document.getElementById('schedulerForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const today = new Date(); today.setHours(0,0,0,0);
 
-      // Language
-      let currentLang='ar';
-      function t(path){const obj=TR[currentLang];const val=path.split('.').reduce((o,k)=>(o||{})[k],obj);return typeof val==='function'?val:val||''}
-      function tp(path,...args){let cur=TR[currentLang];for(const k of path.split('.'))cur=(cur||{})[k];return typeof cur==='function'?cur(...args):cur}
+      const lastVisitStr = document.getElementById('lastVisit').value;
+      if(!lastVisitStr){ showFieldError('lastVisit', t('errRequiredDate')); return; } else { clearFieldError('lastVisit'); }
+      const lastVisit = new Date(lastVisitStr);
+      if (lastVisit > today){ showFieldError('lastVisit', t('errFutureDate')); return; } else { clearFieldError('lastVisit'); }
 
-      // Multi-select
-      const selectedIds=new Set();
-      const chipsEl=document.getElementById('selectedChips');
-      const searchEl=document.getElementById('condSearch');
-      const dropdownEl=document.getElementById('condDropdown');
-      const rootEl=document.getElementById('condMultiRoot');
-      const clearBtn=document.getElementById('clearConds');
+      let ageYears = null; let ageGroupLabel = '';
+      if (ageGroupToggle.checked){
+        const g = document.getElementById('ageGroup').value;
+        if (g==='u40'){ ageYears = 30; ageGroupLabel = currentLang==='ar'?'< 40':'< 40'; }
+        if (g==='40-54'){ ageYears = 45; ageGroupLabel = '40–54'; }
+        if (g==='55-64'){ ageYears = 60; ageGroupLabel = '55–64'; }
+        if (g==='>=65'){ ageYears = 70; ageGroupLabel = '≥65'; }
+        clearFieldError('dob');
+      } else {
+        const dobStr = document.getElementById('dob').value;
+        if(!dobStr){ showFieldError('dob', t('errRequiredDob')); return; } else { clearFieldError('dob'); }
+        const dob = new Date(dobStr); ageYears = calcAgeYears(dob);
+      }
 
-      function renderChips(){chipsEl.innerHTML='';selectedIds.forEach(id=>{const chip=document.createElement('span');chip.className='chip';chip.innerHTML=`<span>${t('conds.'+id)}</span><button type="button" class="text-slate-500 hover:text-rose-600">×</button>`;chip.querySelector('button').onclick=()=>{selectedIds.delete(id);renderChips();renderDropdown(searchEl.value);toggleExtra()};chipsEl.appendChild(chip)});clearBtn.classList.toggle('hidden',selectedIds.size===0)}
-      function renderDropdown(filter=''){const f=filter.trim().toLowerCase();dropdownEl.innerHTML='';CONDITIONS.filter(c=>t('conds.'+c.id).toLowerCase().includes(f)).forEach(c=>{const checked=selectedIds.has(c.id);const row=document.createElement('button');row.type='button';row.className=`w-full text-right px-3 py-2 border-b last:border-b-0 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 ${checked?'bg-indigo-50/60 dark:bg-indigo-900/30':''}`;row.innerHTML=`<div class=\"flex items-start gap-2\"><input type=\"checkbox\" ${checked?'checked':''} class=\"mt-1 pointer-events-none rounded border-slate-300 text-indigo-600 focus:ring-indigo-500\"/><div><div class=\"font-medium\">${t('conds.'+c.id)}</div><div class=\"text-xs text-slate-500 dark:text-slate-400\">${t('explain.'+c.type)}</div></div></div>`;row.onclick=()=>{if(checked)selectedIds.delete(c.id);else selectedIds.add(c.id);renderChips();renderDropdown(f);toggleExtra()};dropdownEl.appendChild(row)})}
-      function openDropdown(){dropdownEl.classList.remove('hidden')}
-      function closeDropdown(){dropdownEl.classList.add('hidden')}
-      document.getElementById('condControl').addEventListener('click',()=>{openDropdown();searchEl.focus()});
-      searchEl.addEventListener('input',e=>{renderDropdown(e.target.value);openDropdown()});
-      clearBtn.addEventListener('click',()=>{selectedIds.clear();renderChips();renderDropdown(searchEl.value);toggleExtra()});
-      document.addEventListener('click',e=>{if(!rootEl.contains(e.target))closeDropdown()});
+      const selected = getSelectedConditions();
+      if(selected.length === 0){ showOnlyGeneral(ageYears, ageGroupLabel, lastVisit); return; }
 
-      function getSelectedConditions(){return CONDITIONS.filter(c=>selectedIds.has(c.id)).map(c=>({...c,label:t('conds.'+c.id)}))}
+      const extras = { hcqYears: parseInt(document.getElementById('hcqYears')?.value || '0', 10), tamoxYears: parseInt(document.getElementById('tamoxYears')?.value || '0', 10), tamoxHighDose: !!document.getElementById('tamoxHighDose')?.checked, tedActive: !!document.getElementById('tedActive')?.checked, t1Years: parseInt(document.getElementById('t1Years')?.value || '0', 10) };
 
-      // Age group toggle
-      const ageGroupToggle=document.getElementById('ageGroupToggle');
-      ageGroupToggle.addEventListener('change',()=>{document.getElementById('dobWrap').classList.toggle('hidden',ageGroupToggle.checked);document.getElementById('ageGroupWrap').classList.toggle('hidden',!ageGroupToggle.checked)});
+      const recommendations = []; const notes = [];
 
-      // Extra fields visibility
-      function sel(key){return selectedIds.has(key)}
-      const toggleExtra=()=>{const any=sel('hcq')||sel('tamox')||sel('ted')||sel('t1dm');document.getElementById('conditionalFields').classList.toggle('hidden',!any);document.getElementById('extra-hcq').classList.toggle('hidden',!sel('hcq'));document.getElementById('extra-tamox').classList.toggle('hidden',!sel('tamox'));document.getElementById('extra-ted').classList.toggle('hidden',!sel('ted'));document.getElementById('extra-t1dm').classList.toggle('hidden',!sel('t1dm'))};
+      selected.forEach(c => {
+        switch(c.type){
+          case 'annual': { const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis:t('explain.annual') }); break; }
+          case 'ageRange': {
+            if (ageYears < 40) { notes.push(t('adultsUnder40')); }
+            else if (ageYears >= 40 && ageYears <= 54) { recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 2), window: [addYears(lastVisit,2), addYears(lastVisit,4)], basis:t('explain.ageRange') + ' (40–54)' }); }
+            else if (ageYears >= 55 && ageYears <= 64) { recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 1), window: [addYears(lastVisit,1), addYears(lastVisit,3)], basis:t('explain.ageRange') + ' (55–64)' }); }
+            else { recommendations.push({ id:c.id, label:c.label, nextDate: addYears(lastVisit, 1), window: [addYears(lastVisit,1), addYears(lastVisit,2)], basis:t('explain.ageRange') + ' (≥65)' }); }
+            break; }
+          case 'text': { notes.push(t('explain.text')); break; }
+          case 't1dm': { if (isFinite(extras.t1Years) && extras.t1Years < 5){ notes.push(currentLang==='ar' ? 'سكري نوع أول: يبدأ فحص الشبكية بعد 5 سنوات من التشخيص (أو الآن إذا لم تُفحص سابقًا)، ثم سنويًا.' : 'Type 1 DM: start retinal screening 5 years after diagnosis (or now if never screened), then annually.'); } const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar' ? 'سنوي بعد بدء المتابعة' : 'Annual once follow‑up starts' }); break; }
+          case 'pregnancyDM': { notes.push(t('explain.pregnancyDM')); break; }
+          case 'gdm': { notes.push(t('explain.gdm')); break; }
+          case 'hcq': { if (extras.hcqYears >= 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي بعد 5 سنوات من الاستخدام':'Annual after 5 years of use' }); } else { notes.push(currentLang==='ar' ? 'استخدام HCQ/كوروكين أقل من 5 سنوات: اتبع الجدول العمري؛ قد يلزم أبكر إذا مرتفع الخطورة.' : 'HCQ/chloroquine <5 years: follow age‑based routine; earlier if high risk.'); } break; }
+          case 'tamox': { if (extras.tamoxHighDose || extras.tamoxYears > 5){ const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window: null, basis: currentLang==='ar'?'سنوي (>5 سنوات أو جرعات مرتفعة)':'Annual (>5 years or high dose)' }); } else { notes.push(currentLang==='ar' ? 'تاموكسيفين ≤ 5 سنوات وبدون جرعات مرتفعة: اتبع الجدول العمري.' : 'Tamoxifen ≤5 years and not high dose: follow age‑based routine.'); } break; }
+          case 'thyroidEye': { if (extras.tedActive){ const early = addMonths(lastVisit, 3); const late  = addMonths(lastVisit, 6); recommendations.push({ id:c.id, label:c.label, nextDate: early, window:[early, late], basis: currentLang==='ar'?'كل 3–6 أشهر أثناء النشاط':'Every 3–6 months while active' }); } else { const next = addYears(lastVisit, 1); recommendations.push({ id:c.id, label:c.label, nextDate: next, window:null, basis: currentLang==='ar'?'سنوي بعد الاستقرار':'Annual when stable' }); } break; }
+        }
+      });
 
-      // Reset/Print
-      function clearFieldError(id){const input=document.getElementById(id),err=document.getElementById(id+'Error');if(input&&err){err.textContent='';err.classList.add('hidden');input.classList.remove('invalid')}}
-      document.getElementById('resetBtn').onclick=()=>{document.getElementById('schedulerForm').reset();selectedIds.clear();renderChips();renderDropdown('');document.getElementById('conditionalFields').classList.add('hidden');document.getElementById('resultsCard').classList.add('hidden');clearFieldError('lastVisit');clearFieldError('dob')};
-      document.getElementById('printBtn').onclick=()=>window.print();
+      const dated = recommendations.filter(r => r.nextDate instanceof Date && !isNaN(r.nextDate)).sort((a,b)=> a.nextDate - b.nextDate);
+      const earliest = dated.length ? dated[0] : null;
 
-      // Submit + validation
-      function showFieldError(id,msg){const input=document.getElementById(id),err=document.getElementById(id+'Error');if(!(input&&err))return;err.textContent=msg;err.classList.remove('hidden');input.classList.add('invalid');input.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>input.focus({preventScroll:true}),350)}
+      const resultsCard = document.getElementById('resultsCard'); const summary = document.getElementById('summary'); const details = document.getElementById('details'); const dueBanner = document.getElementById('dueBanner');
+      resultsCard.classList.remove('hidden');
 
-      document.getElementById('schedulerForm').addEventListener('submit',e=>{
-        e.preventDefault();
-        const today=new Date();today.setHours(0,0,0,0);
-        const lastVisitStr=document.getElementById('lastVisit').value; if(!lastVisitStr){showFieldError('lastVisit',t('errRequiredDate'));return}else{clearFieldError('lastVisit')}
-        const lastVisit=new Date(lastVisitStr); if(lastVisit>today){showFieldError('lastVisit',t('errFutureDate'));return}else{clearFieldError('lastVisit')}
+      let s = '';
+      s += `<div class="text-sm text-slate-600 dark:text-slate-300">${t('lastVisitShort')}: <span class="font-medium">${fmt(lastVisit)}</span>`;
+      if (ageYears!=null) s += ` • ${ageGroupToggle.checked ? t('ageGroupLabel') : t('age')}: <span class="font-medium">${ageGroupToggle.checked ? ageGroupLabel : ageYears}</span>`;
+      s += `</div>`;
 
-        let ageYears=null,ageGroupLabel='';
-        if(ageGroupToggle.checked){const g=document.getElementById('ageGroup').value; if(g==='u40'){ageYears=30;ageGroupLabel=currentLang==='ar'?'< 40':'< 40'} if(g==='40-54'){ageYears=45;ageGroupLabel='40–54'} if(g==='55-64'){ageYears=60;ageGroupLabel='55–64'} if(g==='>=65'){ageYears=70;ageGroupLabel='≥65'} clearFieldError('dob')}
-        else {const dobStr=document.getElementById('dob').value; if(!dobStr){showFieldError('dob',t('errRequiredDob'));return}else{clearFieldError('dob')} const dob=new Date(dobStr); ageYears=calcAgeYears(dob)}
+      if (earliest){
+        s += `<div class="mt-2 text-lg">${t('earliest')}: <span class="font-semibold">${fmt(earliest.nextDate)}</span></div>`;
+        const today0 = new Date(); today0.setHours(0,0,0,0); const diff = daysBetween(earliest.nextDate, today0);
+        dueBanner.classList.remove('hidden');
+        if (diff < 0){ dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700 text-rose-800 dark:text-rose-200'; dueBanner.textContent = tp('overdueBy', Math.abs(diff)); }
+        else if (diff === 0){ dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200'; dueBanner.textContent = t('dueNow'); }
+        else { dueBanner.className = 'mt-3 p-3 rounded-xl border text-sm bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200'; dueBanner.textContent = tp('dueIn', diff); }
+      } else { s += `<div class="mt-2 text-lg">${t('noneAuto')}</div>`; dueBanner.classList.add('hidden'); }
+      summary.innerHTML = s;
 
-        const selected=getSelectedConditions();
-        if(selected.length===0){showOnlyGeneral(ageYears,ageGroupLabel,lastVisit);return}
+      const earliestOnly = document.getElementById('earliestOnly').checked; const list = earliestOnly && earliest ? [earliest] : dated;
+      details.innerHTML = '';
+      list.forEach(r => {
+        const row = document.createElement('div'); row.className = 'p-3 border rounded-xl bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600';
+        const windowTxt = r.window ? `${t('window')}: ${fmt(r.window[0])} → ${fmt(r.window[1])}` : '';
+        row.innerHTML = `<div class="font-medium">${r.label}</div>
+          <div class="text-sm text-slate-700 dark:text-slate-300">${t('basis')}: ${r.basis}</div>
+          <div class="text-sm">${t('nextVisit')}: <span class="font-semibold">${fmt(r.nextDate)}</span>${windowTxt?`<div class='text-xs text-slate-600 dark:text-slate-400 mt-1'>${windowTxt}</div>`:''}</div>`;
+        details.appendChild(row);
+      });
 
-        const extras={hcqYears:parseInt(document.getElementById('hcqYears')?.value||'0',10),tamoxYears:parseInt(document.getElementById('tamoxYears')?.value||'0',10),tamoxHighDose:!!document.getElementById('tamoxHighDose')?.checked,tedActive:!!document.getElementById('tedActive')?.checked,t1Years:parseInt(document.getElementById('t1Years')?.value||'0',10)};
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        const recs=[],notes=[];
-        selected.forEach(c=>{switch(c.type){
-          case 'annual':{recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,1),window:null,basis:t('explain.annual')});break}
-          case 'ageRange':{if(ageYears<40){notes.push(t('adultsUnder40'))} else if(ageYears<=54){recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,2),window:[addYears(lastVisit,2),addYears(lastVisit,4)],basis:t('explain.ageRange')+' (40–54)'})} else if(ageYears<=64){recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,1),window:[addYears(lastVisit,1),addYears(lastVisit,3)],basis:t('explain.ageRange')+' (55–64)'})} else {recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,1),window:[addYears(lastVisit,1),addYears(lastVisit,2)],basis:t('explain.ageRange')+' (≥65)'})} break}
-          case 'text':{notes.push(t('explain.text'));break}
-          case 't1dm':{if(isFinite(extras.t1Years)&&extras.t1Years<5){notes.push(currentLang==='ar'?'سكري نوع أول: يبدأ فحص الشبكية بعد 5 سنوات من التشخيص (أو الآن إذا لم تُفحص سابقًا)، ثم سنويًا.':'Type 1 DM: start retinal screening 5 years after diagnosis (or now if never screened), then annually.')} recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,1),window:null,basis:currentLang==='ar'?'سنوي بعد بدء المتابعة':'Annual once follow‑up starts'});break}
-          case 'pregnancyDM':{notes.push(t('explain.pregnancyDM'));break}
-          case 'gdm':{notes.push(t('explain.gdm'));break}
-          case 'hcq':{if(extras.hcqYears>=5){recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,1),window:null,basis:currentLang==='ar'?'سنوي بعد 5 سنوات من الاستخدام':'Annual after 5 years of use'})} else {notes.push(currentLang==='ar'?'استخدام HCQ/كوروكين أقل من 5 سنوات: اتبع الجدول العمري؛ قد يلزم أبكر إذا مرتفع الخطورة.':'HCQ/chloroquine <5 years: follow age‑based routine; earlier if high risk.')} break}
-          case 'tamox':{if(extras.tamoxHighDose||extras.tamoxYears>5){recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,1),window:null,basis:currentLang==='ar'?'سنوي (>5 سنوات أو جرعات مرتفعة)':'Annual (>5 years or high dose)'})} else {notes.push(currentLang==='ar'?'تاموكسيفين ≤ 5 سنوات وبدون جرعات مرتفعة: اتبع الجدول العمري.':'Tamoxifen ≤5 years and not high dose: follow age‑based routine.')} break}
-          case 'thyroidEye':{if(extras.tedActive){const early=addMonths(lastVisit,3),late=addMonths(lastVisit,6);recs.push({id:c.id,label:c.label,nextDate:early,window:[early,late],basis:currentLang==='ar'?'كل 3–6 أشهر أثناء النشاط':'Every 3–6 months while active'})} else {recs.push({id:c.id,label:c.label,nextDate:addYears(lastVisit,1),window:null,basis:currentLang==='ar'?'سنوي بعد الاستقرار':'Annual when stable'})} break}
-        }});
-
-        const dated=recs.filter(r=>r.nextDate instanceof Date&&!isNaN(r.nextDate)).sort((a,b)=>a.nextDate-b.nextDate);
-        const earliest=dated.length?dated[0]:null;
-        const resultsCard=document.getElementById('resultsCard'); const summary=document.getElementById('summary'); const details=document.getElementById('details'); const dueBanner=document.getElementById('dueBanner');
-        resultsCard.classList.remove('hidden');
-
-        let s=''; s+=`<div class="text-sm text-slate-600 dark:text-slate-300">${t('lastVisitShort')}: <span class="font-medium">${fmt(lastVisit)}</span>`; if(ageYears!=null) s+=` • ${ageGroupToggle.checked?t('ageGroupLabel'):t('age')}: <span class="font-medium">${ageGroupToggle.checked?ageGroupLabel:ageYears}</span>`; s+='</div>';
-        if(earliest){ s+=`<div class="mt-2 text-lg">${t('earliest')}: <span class="font-semibold">${fmt(earliest.nextDate)}</span></div>`; const today0=new Date();today0.setHours(0,0,0,0); const diff=daysBetween(earliest.nextDate,today0); dueBanner.classList.remove('hidden'); if(diff<0){dueBanner.className='mt-3 p-3 rounded-xl border text-sm bg-rose-50 dark:bg-rose-900/30 border-rose-200 dark:border-rose-700 text-rose-800 dark:text-rose-200'; dueBanner.textContent=tp('overdueBy',Math.abs(diff))} else if(diff===0){dueBanner.className='mt-3 p-3 rounded-xl border text-sm bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-200'; dueBanner.textContent=t('dueNow')} else {dueBanner.className='mt-3 p-3 rounded-xl border text-sm bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200'; dueBanner.textContent=tp('dueIn',diff)} }
-        else { s+=`<div class="mt-2 text-lg">${t('noneAuto')}</div>`; dueBanner.classList.add('hidden') }
-        summary.innerHTML=s;
-
-        const earliestOnly=document.getElementById('earliestOnly').checked; const list=earliestOnly&&earliest?[earliest]:dated; details.innerHTML=''; list.forEach(r=>{const row=document.createElement('div'); row.className='p-3 border rounded-xl bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600'; const windowTxt=r.window?`${t('window')}: ${fmt(r.window[0])} → ${fmt(r.window[1])}`:''; row.innerHTML=`<div class="font-medium">${r.label}</div><div class="text-sm text-slate-700 dark:text-slate-300">${t('basis')}: ${r.basis}</div><div class="text-sm">${t('nextVisit')}: <span class="font-semibold">${fmt(r.nextDate)}</span>${windowTxt?`<div class='text-xs text-slate-600 dark:text-slate-400 mt-1'>${windowTxt}</div>`:''}</div>`; details.appendChild(row)});
-
-        resultsCard.scrollIntoView({behavior:'smooth',block:'start'});
-
-        document.getElementById('copyBtn').onclick=async()=>{const conds=getSelectedConditions().map(s=>s.label).join(' • '); const msg=`${t('resultsTitle')}: ${earliest?fmt(earliest.nextDate):'-'}
+      document.getElementById('copyBtn').onclick = async () => {
+        const conds = selected.map(s=>s.label).join(' • ');
+        const msg = `${t('resultsTitle')}: ${earliest?fmt(earliest.nextDate):'-'}
 ${t('lastVisitShort')}: ${fmt(lastVisit)}
 ${t('age')}: ${ageYears!=null?(ageGroupToggle.checked?ageGroupLabel:ageYears):'-'}
-${t('condHeader')}: ${conds}`; if(navigator.share){try{await navigator.share({title:document.title,text:msg})}catch(e){}} try{await navigator.clipboard.writeText(msg+`
+${t('condHeader')}: ${conds}`;
+        if (navigator.share){ try{ await navigator.share({ title: document.title, text: msg }); } catch(e){} }
+        try { await navigator.clipboard.writeText(msg); alert(currentLang==='ar'?'تم النسخ.':'Copied.'); } catch(e){}
+      };
 
-© 2025 Sultan A. Alhassan — Ophth‑Scheduler`); alert(currentLang==='ar'?'تم النسخ.':'Copied.')}catch(e){} };
-        document.getElementById('icsBtn').onclick=()=>{ if(!earliest) return; const dt=earliest.nextDate; const y=dt.getFullYear(); const m=String(dt.getMonth()+1).padStart(2,'0'); const d=String(dt.getDate()).padStart(2,'0'); const ymd=`${y}${m}${d}`; const conds=getSelectedConditions().map(s=>s.label).join(', '); const title=currentLang==='ar'?'موعد فحص عيون موصى به':'Recommended ophthalmology visit'; const desc=(currentLang==='ar'?'مبني على الحالات: ':'Based on conditions: ')+conds; const ics=`BEGIN:VCALENDAR
+      document.getElementById('icsBtn').onclick = () => {
+        if(!earliest) return; const dt = earliest.nextDate; const y = dt.getFullYear(); const m = String(dt.getMonth()+1).padStart(2,'0'); const d = String(dt.getDate()).padStart(2,'0'); const ymd = `${y}${m}${d}`;
+        const conds = selected.map(s=>s.label).join(', ');
+        const title = currentLang==='ar' ? 'موعد فحص عيون موصى به' : 'Recommended ophthalmology visit';
+        const desc = (currentLang==='ar' ? 'مبني على الحالات: ' : 'Based on conditions: ') + conds;
+        const ics = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//OphthScheduler//EN
+PRODID:-//OphthoScheduler//EN
 CALSCALE:GREGORIAN
 BEGIN:VEVENT
 UID:${Date.now()}@ophtho
@@ -347,39 +551,75 @@ DTSTART;VALUE=DATE:${ymd}
 SUMMARY:${title}
 DESCRIPTION:${desc}
 END:VEVENT
-END:VCALENDAR`; const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='ophthalmology-visit.ics'; a.click(); URL.revokeObjectURL(url)};
-      });
-
-      function setLang(lang){window.currentLang=lang;const TR=window.__TR;document.documentElement.lang=lang==='ar'?'ar':'en';document.documentElement.dir=lang==='ar'?'rtl':'ltr';const t=(p)=>p.split('.').reduce((o,k)=>(TR[lang]||{})[k],TR[lang])||'';document.getElementById('title').textContent=t('title');document.getElementById('subtitle').textContent=t('subtitle');document.getElementById('lblAgeGroupToggle').textContent=t('ageGroupToggle');document.getElementById('lblDob').textContent=t('dob');document.getElementById('helpDob').textContent=t('helpDob');document.getElementById('lblLastVisit').textContent=t('lastVisit');document.getElementById('helpLastVisit').textContent=t('helpLastVisit');document.getElementById('condHeader').textContent=t('condHeader');document.getElementById('condHelper').textContent=t('condHelper');document.getElementById('extraHeader').textContent=t('extraHeader');document.getElementById('lblHcqYears').textContent=t('hcqYears');document.getElementById('helpHcq').textContent=t('helpHcq');document.getElementById('lblTamoxYears').textContent=t('tamoxYears');document.getElementById('lblTamoxHighDose').textContent=t('tamoxHighDose');document.getElementById('helpTamox').textContent=t('helpTamox');document.getElementById('lblTedActive').textContent=t('tedActive');document.getElementById('helpTed').textContent=t('helpTed');document.getElementById('lblT1Years').textContent=t('t1Years');document.getElementById('helpT1').textContent=t('helpT1');document.getElementById('btnCalc').textContent=t('btnCalc');document.getElementById('resetBtn').textContent=t('btnReset');document.getElementById('printBtn').textContent=t('btnPrint');document.getElementById('resultsTitle').textContent=t('resultsTitle');document.getElementById('ruleExplain').textContent=t('ruleExplain');document.getElementById('lblEarliestOnly').textContent=t('earliestOnly');document.getElementById('copyBtn').textContent=t('copyShare');document.getElementById('icsBtn').textContent=t('addCalendar');document.getElementById('actionsTitle').textContent=t('actionsTitle');document.getElementById('lblAgeGroup').textContent=t('ageGroup');document.getElementById('helpAgeGroup').textContent=t('helpAgeGroup');document.getElementById('condSearch').placeholder=t('condSearchPh');document.getElementById('clearConds').textContent=t('condClear');document.getElementById('termsLink').textContent=lang==='ar'?'الشروط':'Terms';document.getElementById('privacyLink').textContent=lang==='ar'?'الخصوصية والتنبيه':'Privacy & Disclaimer';document.getElementById('ctTitle').textContent=lang==='ar'?'تواصل':'Contact';document.getElementById('ctMsg').textContent=lang==='ar'?'للتواصل أو طلب إذن استخدام:':'For contact or permission requests:';document.getElementById('ctClose').textContent=lang==='ar'?'إغلاق':'Close';document.getElementById('legalClose').textContent=lang==='ar'?'إغلاق':'Close'}
-      document.getElementById('lang-ar').onclick=()=>setLang('ar');
-      document.getElementById('lang-en').onclick=()=>setLang('en');
-
-      // Contact & legal
-      const contactDialog=document.getElementById('contactDialog');
-      document.getElementById('contactBtn').onclick=()=>contactDialog.showModal();
-      document.getElementById('ctClose').onclick=()=>contactDialog.close();
-
-      const legalDialog=document.getElementById('legalDialog');
-      const legalBody=document.getElementById('legalBody');
-      document.getElementById('legalClose').onclick=()=>legalDialog.close();
-      document.getElementById('termsLink').onclick=()=>{document.getElementById('legalTitle').textContent=window.currentLang==='ar'?'الشروط':'Terms of Use'; legalBody.innerHTML=`<h4>${window.currentLang==='ar'?'الاستخدام':'License'}</h4><p>${window.currentLang==='ar'?'الاستخدام الشخصي فقط. يمنع النسخ أو التوزيع أو الاشتقاق.':'Personal, non‑commercial use only. No copying, redistribution, or derivative works.'}</p><h4>${window.currentLang==='ar'?'منع التفكيك والنسخ':'No scraping / reverse engineering'}</h4><p>${window.currentLang==='ar'?'يُمنع جمع البيانات آليًا أو تفكيك منطق الكود أو مخرجاته.':'Automated collection, scraping, or reverse engineering of code, logic, or outputs is prohibited.'}</p><h4>${window.currentLang==='ar'?'الحقوق':'IP rights'}</h4><p>${window.currentLang==='ar'?'جميع الحقوق محفوظة لسلطان عبد الرحمن الحسن ومحميّة بموجب أنظمة المملكة.':'All rights reserved by Sultan Abdulrahman Alhassan and protected by Saudi law.'}</p><h4>${window.currentLang==='ar'?'تنبيه طبي':'Medical notice'}</h4><p>${window.currentLang==='ar'?'هذه أداة تثقيفية فقط وليست نصيحة طبية.':'Educational tool only; not medical advice.'}</p>`; legalDialog.showModal()};
-      document.getElementById('privacyLink').onclick=()=>{document.getElementById('legalTitle').textContent=window.currentLang==='ar'?'الخصوصية والتنبيه':'Privacy & Disclaimer'; legalBody.innerHTML=`<p>${window.currentLang==='ar'?'لا نجمع بيانات شخصية مُعرِّفة. لا ملفات تعريفية ولا تحليلات إلا إذا تم الإعلان لاحقًا.':'We do not collect personally identifying data. No analytics/cookies unless added later and disclosed.'}</p><p>${window.currentLang==='ar'?'المعلومات لأغراض عامة فقط وليست نصيحة طبية.':'Information is for general purposes only and is not medical advice.'}</p>`; legalDialog.showModal()};
-
-      // Anti-copy (kept minimal so it doesn't block UX)
-      document.addEventListener('contextmenu',e=>{ if(!e.target.closest('input,textarea')) e.preventDefault() });
-      document.addEventListener('copy',e=>{ const sel=String(window.getSelection()); if(!sel) return; const note=(window.currentLang==='ar'?"
-
-© 2025 سلطان عبد الرحمن الحسن — جميع الحقوق محفوظة. Ophth‑Scheduler™":"
-
-© 2025 Sultan Abdulrahman Alhassan — All rights reserved. Ophth‑Scheduler™"); e.preventDefault(); e.clipboardData.setData('text/plain', sel + note) });
-      document.addEventListener('dragstart',e=>e.preventDefault());
-
-      // Default language
-      setLang('ar');
-      renderDropdown('');
-      renderChips();
+END:VCALENDAR`;
+        const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ophthalmology-visit.ics'; a.click(); URL.revokeObjectURL(url);
+      };
     });
+
+    function showOnlyGeneral(ageYears, ageGroupLabel, lastVisit){
+      const resultsCard = document.getElementById('resultsCard'); const summary = document.getElementById('summary'); const details = document.getElementById('details'); const dueBanner = document.getElementById('dueBanner');
+      resultsCard.classList.remove('hidden');
+      let s = `<div class=\"text-sm text-slate-600 dark:text-slate-300\">${t('lastVisitShort')}: <span class=\"font-medium\">${fmt(lastVisit)}</span>`;
+      if (ageYears!=null) s += ` • ${t('age')}: <span class=\"font-medium\">${ageGroupLabel||ageYears}</span>`; s += `</div>`;
+      let blocks = '';
+      if (ageYears < 40){ s += `<div class="mt-2">${t('adultsUnder40')}</div>`; }
+      else if (ageYears <= 54){ s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,2))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,4))}</span></div>`; blocks += block(t('conds.noRiskAdults') + ' (40–54)', t('explain.ageRange'), addYears(lastVisit,2), [addYears(lastVisit,2), addYears(lastVisit,4)]); }
+      else if (ageYears <= 64){ s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,1))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,3))}</span></div>`; blocks += block(t('conds.noRiskAdults') + ' (55–64)', t('explain.ageRange'), addYears(lastVisit,1), [addYears(lastVisit,1), addYears(lastVisit,3)]); }
+      else { s += `<div class="mt-2 text-lg">${t('window')}: <span class="font-semibold">${fmt(addYears(lastVisit,1))}</span> → <span class="font-semibold">${fmt(addYears(lastVisit,2))}</span></div>`; blocks += block(t('conds.noRiskAdults') + ' (≥65)', t('explain.ageRange'), addYears(lastVisit,1), [addYears(lastVisit,1), addYears(lastVisit,2)]); }
+      summary.innerHTML = s; dueBanner.classList.add('hidden'); details.innerHTML = blocks; resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function block(title, basis, nextDate, window){ const windowTxt = window ? `${t('window')}: ${fmt(window[0])} → ${fmt(window[1])}` : ''; return `<div class="p-3 border rounded-xl bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600">
+        <div class="font-medium">${title}</div>
+        <div class="text-sm text-slate-700 dark:text-slate-300">${t('basis')}: ${basis}</div>
+        <div class="text-sm">${t('nextVisit')}: <span class="font-semibold">${fmt(nextDate)}</span>${window?`<div class='text-xs text-slate-600 dark:text-slate-400 mt-1'>${windowTxt}</div>`:''}</div>
+      </div>`; }
+
+    // Language toggle
+    function setLang(lang){
+      currentLang = lang; document.documentElement.lang = lang==='ar'?'ar':'en'; document.documentElement.dir = lang==='ar'?'rtl':'ltr';
+      document.getElementById('title').textContent = t('title');
+      document.getElementById('subtitle').textContent = t('subtitle');
+      document.getElementById('lblAgeGroupToggle').textContent = t('ageGroupToggle');
+      document.getElementById('lblDob').textContent = t('dob');
+      document.getElementById('helpDob').textContent = t('helpDob');
+      document.getElementById('lblLastVisit').textContent = t('lastVisit');
+      document.getElementById('helpLastVisit').textContent = t('helpLastVisit');
+      document.getElementById('condHeader').textContent = t('condHeader');
+      document.getElementById('condHelper').textContent = t('condHelper');
+      document.getElementById('extraHeader').textContent = t('extraHeader');
+      document.getElementById('lblHcqYears').textContent = t('hcqYears');
+      document.getElementById('helpHcq').textContent = t('helpHcq');
+      document.getElementById('lblTamoxYears').textContent = t('tamoxYears');
+      document.getElementById('lblTamoxHighDose').textContent = t('tamoxHighDose');
+      document.getElementById('helpTamox').textContent = t('helpTamox');
+      document.getElementById('lblTedActive').textContent = t('tedActive');
+      document.getElementById('helpTed').textContent = t('helpTed');
+      document.getElementById('lblT1Years').textContent = t('t1Years');
+      document.getElementById('helpT1').textContent = t('helpT1');
+      document.getElementById('btnCalc').textContent = t('btnCalc');
+      document.getElementById('resetBtn').textContent = t('btnReset');
+      document.getElementById('printBtn').textContent = t('btnPrint');
+      document.getElementById('resultsTitle').textContent = t('resultsTitle');
+      document.getElementById('ruleExplain').textContent = t('ruleExplain');
+      document.getElementById('footerText').textContent = t('footer');
+      document.getElementById('lblEarliestOnly').textContent = t('earliestOnly');
+      document.getElementById('copyBtn').textContent = t('copyShare');
+      document.getElementById('icsBtn').textContent = t('addCalendar');
+      document.getElementById('actionsTitle').textContent = t('actionsTitle');
+      document.getElementById('lblAgeGroup').textContent = t('ageGroup');
+      document.getElementById('helpAgeGroup').textContent = t('helpAgeGroup');
+      searchEl.placeholder = t('condSearchPh');
+      clearBtn.textContent = t('condClear');
+      renderDropdown(searchEl.value); renderChips(); toggleExtra();
+    }
+
+    document.getElementById('lang-ar').addEventListener('click', () => setLang('ar'));
+    document.getElementById('lang-en').addEventListener('click', () => setLang('en'));
+    document.getElementById('earliestOnly').addEventListener('change', () => { const form = document.getElementById('schedulerForm'); form.dispatchEvent(new Event('submit')); });
+
+    // Initialize
+    renderDropdown(''); renderChips(); setLang('ar');
   </script>
-  <!-- Fingerprint phrase (proof-of-creation marker): OphthScheduler‑v2‑SAA‑2025‑doNotRemove -->
 </body>
 </html>
